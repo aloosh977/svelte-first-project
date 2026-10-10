@@ -2,12 +2,25 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
+	import { supabase } from '$lib/supabase';
+	import { invalidate } from '$app/navigation';
 
-	let { children } = $props();
+	let { data, children } = $props();
+	let { session, user } = $derived(data);
 
 	let mycanvas: HTMLCanvasElement;
 
 	onMount(() => {
+		// invalidate supabase
+		const {
+			data: { subscription }
+		} = supabase.auth.onAuthStateChange((_, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) {
+				invalidate('supabase:auth');
+			}
+		});
+
+		// canvas animation
 		const ctx = mycanvas.getContext('2d');
 		if (!ctx) return;
 
@@ -72,6 +85,7 @@
 		return () => {
 			cancelAnimationFrame(animationFrameId);
 			window.removeEventListener('resize', resizeCanvas);
+			subscription.unsubscribe();
 		};
 	});
 </script>

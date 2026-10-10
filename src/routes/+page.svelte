@@ -48,7 +48,7 @@
 			<div class="alert">{completedFields} of 4 filled out</div>
 		{/if}
 		<Button
-			text="Submit"
+			text={loading.show ? 'Processing...' : 'Submit'}
 			type="button"
 			disabled={completedFields < 4}
 			onclick={() => {
