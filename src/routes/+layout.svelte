@@ -30,14 +30,16 @@
 		console.log(dpr);
 
 		// create objects
+		const particleCount = 35;
+		const maxDistance = 120;
 		const objects: Array<{ x: number; y: number; vx: number; vy: number; radius: number }> = [];
-		for (let i = 0; i < 25; i++) {
+		for (let i = 0; i < particleCount; i++) {
 			objects.push({
 				x: Math.random() * window.innerWidth,
 				y: Math.random() * window.innerHeight,
-				vx: (Math.random() - 0.5) * 2,
-				vy: (Math.random() - 0.5) * 2,
-				radius: Math.random() * 7 + 5
+				vx: (Math.random() - 0.5) * 0.8, // Slower, more graceful movement
+				vy: (Math.random() - 0.5) * 0.8,
+				radius: Math.random() * 2 + 1.5 // Smaller, sleeker dots
 			});
 		}
 
@@ -46,14 +48,31 @@
 			ctx.save();
 			ctx.scale(dpr, dpr);
 
-			ctx.fillStyle = '#2F4F4F';
+			ctx.fillStyle = '#1a2e2e';
 			ctx.fillRect(0, 0, mycanvas.width, mycanvas.height);
 
-			ctx.fillStyle = '#F5F5DC';
-			objects.forEach((obj) => {
+			ctx.fillStyle = 'rgba(245, 245, 220, 0.4)';
+			objects.forEach((obj, index) => {
 				ctx.beginPath();
 				ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
 				ctx.fill();
+
+				for (let j = index + 1; j < particleCount; j++) {
+					const other = objects[j];
+					const dx = other.x - obj.x;
+					const dy = other.y - obj.y;
+					const distance = Math.sqrt(dx * dx + dy * dy);
+
+					if (distance < maxDistance) {
+						const opacity = (1 - distance / maxDistance) * 2;
+						ctx.strokeStyle = `rgba(245, 245, 220,${opacity})`;
+						ctx.lineWidth = 0.8;
+						ctx.beginPath();
+						ctx.moveTo(obj.x, obj.y);
+						ctx.lineTo(other.x, other.y);
+						ctx.stroke();
+					}
+				}
 
 				//move positions
 				obj.x += obj.vx;
@@ -100,3 +119,9 @@
 		{@render children()}
 	</main>
 </div>
+
+<style>
+	* {
+		box-sizing: border-box;
+	}
+</style>
