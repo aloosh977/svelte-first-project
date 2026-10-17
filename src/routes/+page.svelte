@@ -1,354 +1,301 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import gsap from 'gsap';
 	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
+	let { data } = $props();
+	let players = $derived(data.players);
+
+	let showcase: HTMLElement;
+	let viewport: HTMLDivElement;
+	let track: HTMLDivElement;
+	let active = $state(0);
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
-
-		const track = document.querySelector('.horizontal-track') as HTMLElement;
-		if (!track) return;
-
-		// Calculate how far to scroll horizontally based on track width
-		const getScrollAmount = () => -(track.scrollWidth - window.innerWidth);
-
-		const tween = gsap.to(track, {
-			x: getScrollAmount,
-			ease: 'none',
-			scrollTrigger: {
-				trigger: '.horizontal-section',
-				start: 'top top',
-				end: () => `+=${track.scrollWidth - window.innerWidth}`,
-				pin: true,
-				scrub: 1,
-				invalidateOnRefresh: true
-			}
-		});
-
-		return () => {
-			tween.kill();
-			ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-		};
+		const media = gsap.matchMedia();
+		media.add(
+			'(min-width: 768px) and (prefers-reduced-motion: no-preference)',
+			() => {
+				active = 0;
+				gsap.to(track, {
+					y: () => -(track.scrollHeight - viewport.clientHeight),
+					ease: 'none',
+					onUpdate() {
+						const distance = track.scrollHeight - viewport.clientHeight;
+						const offset = -(gsap.getProperty(track, 'y') as number);
+						active =
+							distance > 0
+								? Math.min(
+										players.length - 1,
+										Math.round((offset / distance) * (players.length - 1))
+									)
+								: 0;
+					},
+					scrollTrigger: {
+						trigger: showcase,
+						start: 'top top',
+						end: () => `+=${(players.length - 1) * viewport.clientHeight}`,
+						pin: true,
+						scrub: 0.6,
+						invalidateOnRefresh: true
+					}
+				});
+			},
+			showcase
+		);
+		return () => media.revert();
 	});
 </script>
 
+<svelte:head>
+	<title>Ali Suleiman's Selection — Squad Showcase</title>
+	<meta
+		name="description"
+		content="Explore Ali Suleiman's featured squad in an interactive player showcase."
+	/>
+</svelte:head>
+
 <div class="page-wrapper">
 	<section class="intro">
-		<div class="intro-content">
-			<span class="badge">Squad Showcase</span>
-			<h1>Ali Suleiman's Selection</h1>
-			<p>Scroll down to experience the horizontal squad scroll.</p>
-		</div>
+		<span class="eyebrow">Squad Showcase / 2026</span>
+		<h1>Ali Suleiman's<br />Selection</h1>
+		<p>Eleven players. One vision.</p>
+		<a href="#squad">Explore the squad ↓</a>
 	</section>
-
-	<!-- Horizontal Scroll Section -->
-	<section class="horizontal-section">
-		<div class="horizontal-track">
-			<div class="section-title-card">
-				<h2>Featured<br />Squad 2026</h2>
-				<span>01 / 11</span>
+	<section id="squad" class="showcase" bind:this={showcase} aria-labelledby="squad-title">
+		<div class="details">
+			<span class="eyebrow">The selection</span>
+			<h2 id="squad-title">Featured<br />Squad 2026</h2>
+			<div class="counter" aria-hidden="true">
+				{String(active + 1).padStart(2, '0')}<span> / {players.length}</span>
 			</div>
-
-			<!-- Player Cards -->
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/COURTOIS_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Courtois"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">1</span>
-					<h3>Courtois</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/CUCURELLA_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Cucurella"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">2</span>
-					<h3>Cucurella</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/HUIJSEN_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Huijsen"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">3</span>
-					<h3>Huijsen</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/KONATE_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Konaté"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">4</span>
-					<h3>Konaté</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/TRENT_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Trent"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">5</span>
-					<h3>Trent</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/CAMAVINGA_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Camavinga"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">6</span>
-					<h3>Camavinga</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/BERNARDO_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Bernardo Silva"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">7</span>
-					<h3>Bernardo Silva</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/DIOMANDE_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Diomande"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">8</span>
-					<h3>Diomande</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/BELLINGHAM_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Bellingham"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">9</span>
-					<h3>Bellingham</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/GULER_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="Arda Güler"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">10</span>
-					<h3>Arda Güler</h3>
-				</div>
-			</div>
-
-			<div class="player-card">
-				<div class="image-wrapper">
-					<img
-						src="https://assets.realmadrid.com/is/image/realmadrid/ESPI_CARITA_1500X2000?$Desktop$&fit=wrap&wid=288&hei=384"
-						alt="C. Espí"
-					/>
-				</div>
-				<div class="player-info">
-					<span class="number">11</span>
-					<h3>C. Espí</h3>
-				</div>
+			<ol class="player-list" aria-label="Squad players">
+				{#each players as player, index (player.name)}
+					<li class:active={active === index} aria-current={active === index ? 'true' : undefined}>
+						<span>{String(index + 1).padStart(2, '0')}</span>{player.name}
+					</li>
+				{/each}
+			</ol>
+		</div>
+		<div class="image-viewport" bind:this={viewport}>
+			<div class="image-track" bind:this={track}>
+				{#each players as player, index (player.name)}
+					<article class="player-card" aria-label={player.name}>
+						<div class="portrait">
+							<span class="portrait-number" aria-hidden="true"
+								>{String(index + 1).padStart(2, '0')}</span
+							>
+							<img
+								src={player.image_url}
+								alt={player.name}
+								width="288"
+								height="384"
+								onerror={(event) => {
+									(event.currentTarget as HTMLImageElement).style.visibility = 'hidden';
+								}}
+							/>
+						</div>
+						<div class="player-info">
+							<span>{String(index + 1).padStart(2, '0')} / {players.length}</span>
+							<h3>{player.name}</h3>
+						</div>
+					</article>
+				{/each}
 			</div>
 		</div>
 	</section>
-
 	<section class="outro">
 		<p>Thanks for visiting</p>
+		<a href={resolve('/forum')}>Visit the forum ↗</a>
 	</section>
 </div>
 
 <style>
 	.page-wrapper {
 		color: #f5f5dc;
-		font-family:
-			system-ui,
-			-apple-system,
-			sans-serif;
-		overflow-x: hidden;
+		font-family: system-ui, sans-serif;
 	}
-
-	.intro {
-		height: 100vh;
+	.intro,
+	.outro {
+		min-height: 100svh;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		text-align: center;
-		padding: 0 20px;
+		padding: 2rem;
+		gap: 1.5rem;
 	}
-
-	.intro-content {
-		max-width: 600px;
-	}
-
-	.badge {
-		background: rgba(245, 245, 220, 0.1);
-		color: #f5f5dc;
-		padding: 6px 14px;
-		border-radius: 20px;
-		font-size: 0.85rem;
+	.eyebrow {
+		font-size: 0.75rem;
 		text-transform: uppercase;
-		letter-spacing: 2px;
-		border: 1px solid rgba(245, 245, 220, 0.2);
+		letter-spacing: 0.2em;
+		opacity: 0.65;
 	}
-
-	.intro h1 {
-		font-size: 3.5rem;
-		margin: 20px 0 10px;
+	h1 {
+		font-size: clamp(3rem, 8vw, 7rem);
+		line-height: 1;
+		letter-spacing: -0.06em;
 		font-weight: 800;
-		letter-spacing: -1px;
 	}
-
-	.intro p {
-		color: rgba(245, 245, 220, 0.7);
-		font-size: 1.2rem;
+	.intro p,
+	.outro p {
+		font-size: 1.3rem;
+		opacity: 0.7;
 	}
-
-	/* Horizontal Scroll Styles */
-	.horizontal-section {
-		height: 100vh;
-		display: flex;
-		align-items: center;
+	a {
+		padding: 0.8rem 0;
+		border-bottom: 1px solid currentColor;
+	}
+	a:focus-visible {
+		outline: 2px solid #f5f5dc;
+		outline-offset: 6px;
+	}
+	.showcase {
+		height: 100svh;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 6vw;
+		padding: 5vh 8vw;
+		background: #142626;
 		overflow: hidden;
-		background: rgba(15, 25, 25, 0.4);
 	}
-
-	.horizontal-track {
-		display: flex;
-		gap: 40px;
-		padding: 0 5vw;
-		will-change: transform;
-	}
-
-	.section-title-card {
-		min-width: 300px;
+	.details {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		padding: 40px;
-		border-right: 1px solid rgba(245, 245, 220, 0.15);
+		min-height: 0;
 	}
-
-	.section-title-card h2 {
-		font-size: 3rem;
-		font-weight: 800;
+	h2 {
+		font-size: clamp(2rem, 4vw, 4rem);
+		line-height: 1.05;
+		letter-spacing: -0.05em;
+		margin: 1rem 0;
+		font-weight: 750;
+	}
+	.counter {
+		font-size: clamp(2.5rem, 5vw, 5rem);
 		line-height: 1.1;
-		margin-bottom: 20px;
-		letter-spacing: -1px;
+		font-variant-numeric: tabular-nums;
 	}
-
-	.section-title-card span {
-		font-family: monospace;
-		font-size: 1.2rem;
-		color: rgba(245, 245, 220, 0.6);
+	.counter span {
+		font-size: 1rem;
+		opacity: 0.45;
 	}
-
-	.player-card {
-		min-width: 280px;
-		max-width: 280px;
-		background: rgba(28, 46, 46, 0.7);
-		border-radius: 16px;
+	.player-list {
+		list-style: none;
+		padding: 0;
+		margin: 1.5rem 0 0;
+	}
+	.player-list li {
+		display: flex;
+		gap: 1.2rem;
+		padding: 0.25rem 0;
+		opacity: 0.3;
+		transition:
+			opacity 0.2s,
+			transform 0.2s;
+		font-size: clamp(0.8rem, 1.3vw, 1rem);
+	}
+	.player-list li.active {
+		opacity: 1;
+		transform: translateX(0.5rem);
+	}
+	.player-list li span {
+		font-size: 0.7rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.image-viewport {
+		height: 90svh;
 		overflow: hidden;
-		border: 1px solid rgba(245, 245, 220, 0.1);
-		flex-shrink: 0;
 	}
-
-	.image-wrapper {
-		aspect-ratio: 3 / 4;
+	.image-track {
 		width: 100%;
+	}
+	.player-card {
+		height: 90svh;
+		display: flex;
+		flex-direction: column;
+	}
+	.portrait {
+		flex: 1;
+		min-height: 0;
+		position: relative;
+		background: #294343;
 		overflow: hidden;
 	}
-
+	.portrait-number {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: #f5f5dc22;
+		font-size: clamp(6rem, 18vw, 20rem);
+		font-weight: 800;
+	}
 	img {
+		position: relative;
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
-		transition: transform 0.5s ease;
+		object-fit: contain;
 	}
-
-	.player-card:hover img {
-		transform: scale(1.05);
-	}
-
 	.player-info {
-		padding: 20px;
 		display: flex;
 		align-items: center;
-		gap: 15px;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 1.25rem 0;
 	}
-
-	.number {
-		font-size: 0.9rem;
-		font-weight: 700;
-		color: #2f4f4f;
-		background: #f5f5dc;
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
+	.player-info span {
+		font-size: 0.75rem;
+		opacity: 0.5;
 	}
-
-	.player-info h3 {
-		font-size: 1.2rem;
-		font-weight: 600;
-		margin: 0;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+	h3 {
+		font-size: clamp(1rem, 2vw, 1.7rem);
 	}
-
-	.outro {
-		height: 100vh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.8rem;
-		color: rgba(245, 245, 220, 0.6);
-		letter-spacing: 1px;
+	@media (max-height: 740px) and (min-width: 768px) {
+		h2 {
+			font-size: 2rem;
+		}
+		.counter {
+			font-size: 2.5rem;
+		}
+		.player-list {
+			margin-top: 0.75rem;
+		}
+		.player-list li {
+			padding: 0.1rem 0;
+		}
+	}
+	@media (max-width: 767px), (prefers-reduced-motion: reduce) {
+		.showcase {
+			height: auto;
+			display: block;
+			padding: 3rem 6vw;
+			overflow: visible;
+		}
+		.player-list,
+		.counter {
+			display: none;
+		}
+		.details {
+			margin-bottom: 2rem;
+		}
+		.image-viewport {
+			height: auto;
+			overflow: visible;
+		}
+		.image-track {
+			display: grid;
+			gap: 2rem;
+		}
+		.player-card {
+			height: auto;
+		}
+		.portrait {
+			flex: auto;
+			aspect-ratio: 3 / 4;
+		}
 	}
 </style>
